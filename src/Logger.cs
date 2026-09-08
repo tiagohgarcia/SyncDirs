@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace SynchDirs;
+namespace SyncDirs;
 
 internal interface ISyncLogger 
 {
@@ -17,6 +17,8 @@ internal sealed class Logger : ISyncLogger, IDisposable
 
     public Logger(string logFilePath)
     {
+        // if log path given is inside a nonexistent directory - create directory first and then create log file
+
         string? directory = Path.GetDirectoryName(logFilePath);
         if(!string.IsNullOrEmpty(directory))
         {

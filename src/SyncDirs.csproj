@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="SynchDirs.Tests" />
+    <InternalsVisibleTo Include="SyncDirs.Tests" />
   </ItemGroup>
   
 </Project>

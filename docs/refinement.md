@@ -108,14 +108,17 @@ Program that synchronizes two folders: source and replica
 ## Project strucure (DRAFT)
 ```
 docs/
-    refinement.md           this file
+    refinement.md                   this file
 src/
-    Program.cs              entry point - arguments, call logger and loop
-    Logger.cs               custom logger: Interface (Info, Warn, Error) + console and file implementation
-    PathHelper.cs           helper for path normalization, verification (inside or equal) and symlink chase
-    CommandLineOptions.cs   parsing and validation, defaults and help
-    SyncEngine.cs           cycle: create/copy pass + deletion pass (stray files)
+    Program.cs                      entry point - arguments, call logger and loop
+    Logger.cs                       custom logger: Interface (Info, Warn, Error) + console and file implementation
+    PathHelper.cs                   helper for path normalization, verification (inside or equal) and symlink chase
+    CommandLineOptions.cs           parsing and validation, defaults and help
+    SyncEngine.cs                   cycle: create/copy pass + deletion pass (stray files)
 tests/
+    utils/
+        TempDirectory.cs            create and Dispose temporary directory for testing
+        SymLinkUtils.cs             symlink creation allowed check
     PathHelperTests.cs
     CommandLineOptionsTests.cs
     SyncEngineTests.cs
@@ -129,13 +132,17 @@ tests/
     
     PathHelper:
 
+    - Create TempDirectoryUtils that makes it easier to create and dispose temporary directories for testing
+    - Create SymLinkUtils.cs that checks if the current machine can create symlinks, if not skip it
+
     | Case        | Expected    |
     | ----------- | ----------- |
     | Normalize path with extra '/' | Trim extra chat      |
     | Normalize path that is root  | root stays - no change     |
+    | Normalize path with ".." example data/example/../new  | root stays - no change     |
     | Check if paths are inside other paths ([InlineData]) | true or false      |
     | Check if paths are the same ([InlineData]) - try names with different capitaization (Windows and Linux handle it differently) | true or false      |
-    | Get real path from symlinks (link to file, link to directory, link to link, double linked, nonexistent) - detail: will need to create temp files and might not work on Windows (depends on version) | true or false      |
+    | Get real path from symlinks (link to file, link to directory, link to link, double linked, nonexistent link) - detail: will need to create temp files and might not work on Windows (depends on version) | target      |
     
     CommandLineOptions:
 
