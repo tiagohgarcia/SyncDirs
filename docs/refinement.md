@@ -151,7 +151,7 @@ tests/
     | Parse parameters with invalid shape |  Exception     |
     | source (does not exist / is a file / subdirectory of replica) |  Exception     |
     | replica (is a file / same as source / subdirectory of source) |  Exception     |
-    | log file (same as source or replica/ inside of source or replica / is a directory) |  Exception     |
+    | log file (same as source or replica/ inside of source or replica) |  Exception     |
     | valid arguments |  valid object     |
     | valid arguments in different order |  valid object     |
     | log path and interval are not passed |  valid object with default interval and log  |
