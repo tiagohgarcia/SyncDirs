@@ -11,6 +11,7 @@ Program that synchronizes two folders: source and replica
 - Folder paths, synchronization interval and log file path should be provided using command line args
 - No use of third-party libraries that implement folder synchronization
 - It is allowed use of external libraries for well-known algorithms
+- Should be cross platform (Linux & Windows)
 
 ### Aproach
 
