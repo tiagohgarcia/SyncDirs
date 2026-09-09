@@ -101,4 +101,36 @@ public class PathHelperTests
 
         Assert.Equal(Path.Combine(temp.Path, "nonexistent"), PathHelper.GetRealPath(linkPath));
     }
+
+    [Theory]
+    [InlineData("/data/example", "/data/example/new/dir", "new/dir")]
+    [InlineData("/data/example", "/home/new", "../../home/new")]
+    public void Relative_WithDifferentPaths_ReturnsExpectedResult(string root, string path, string expected)
+    {
+        string expectedNative = expected.Replace('/', Path.DirectorySeparatorChar);
+        Assert.Equal(expectedNative, PathHelper.Relative(root, path));
+    }
+
+    [Theory]
+    [InlineData("/data/example")]
+    [InlineData("/data/example/")]
+    public void Relative_RootEqualsPath_ReturnsExactlyRoot(string root)
+    {
+        /*
+            Because when root == path, Relative() returns root verbatim/unchanged
+        */
+        Assert.Equal(root, PathHelper.Relative(root, "/data/example"));
+    }
+
+    [SymLinkFact]
+    public void GetRealPath_LinkToRelativeDirectory_ReturnsTargetFullPath()
+    {
+        using var temp = new TempDirectoryUtils();
+        string linkPath = Path.Combine(temp.Path, "linkdata");
+        string targetPath = Directory.CreateDirectory(Path.Combine(temp.Path, "targetdata")).FullName;
+        string relativeTargetPath = PathHelper.Relative(temp.Path, targetPath);
+        Directory.CreateSymbolicLink(linkPath, relativeTargetPath);
+
+        Assert.Equal(targetPath, PathHelper.GetRealPath(linkPath));
+    }
 }

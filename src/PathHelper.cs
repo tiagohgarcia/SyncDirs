@@ -5,6 +5,7 @@ internal static class PathHelper
     public static StringComparison Comparison { get; } = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() 
                                                             ? StringComparison.OrdinalIgnoreCase 
                                                             : StringComparison.Ordinal;
+    public static StringComparer Comparer { get; } = StringComparer.FromComparison(Comparison);
 
     // Get full path + trim separator
     public static string NormalizePath(string path)
@@ -53,5 +54,11 @@ internal static class PathHelper
     public static bool AreEqual(string path1, string path2, StringComparison comparison)
     {
         return string.Equals(path1, path2, comparison);
+    }
+
+    public static string Relative(string root, string path)
+    {
+        string relativePath = Path.GetRelativePath(root, path);
+        return relativePath == "." ? root : relativePath;
     }
 }

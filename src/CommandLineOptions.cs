@@ -12,7 +12,7 @@ internal sealed class CommandLineOptions
 
     public const string HelpText = """
         
-        USAGE: synch_dirs <source> <replica> [options]
+        USAGE: syncdirs <source> <replica> [options]
         
         REQUIRED
         <source>                    - path to source folder
@@ -20,7 +20,7 @@ internal sealed class CommandLineOptions
 
         OPTIONS
         -i, --interval <seconds>    - synchronization interval in seconds (default: 60s)
-        -l, --logpath <path>        - path to log file (default: ./synch.log)
+        -l, --logpath <path>        - path to log file (default: ./syncdirs.log)
         -h, --help                  - this info
 
         """;
