@@ -136,52 +136,100 @@ tests/
     
 - xUnit allows use of [Theory] and [InlineData] - useful for tests with different paths
     
-    Test cases:
     
-    PathHelper:
+#### Logger:
 
-    - Create TempDirectoryUtils that makes it easier to create and dispose temporary directories for testing
-    - Create SymLinkUtils.cs that checks if the current machine can create symlinks, if not skip it
+| Case        | Expected    |
+| ----------- | ----------- |
+| Write line to file | line with correct level      |
+| Log file already exists  | append to file    |
+| Log file path is in non existent Directory | create directory and file    |
+| Try to write after dispose file handle | should it exception and not write on file    |
+| multiple threads access the file at the same time | output lines in file should all be written without issues    |
 
-    | Case        | Expected    |
-    | ----------- | ----------- |
-    | Normalize path with extra '/' | Trim extra chat      |
-    | Normalize path that is root  | root stays - no change     |
-    | Normalize path with ".." example data/example/../new  | root stays - no change     |
-    | Check if paths are inside other paths ([InlineData]) | true or false      |
-    | Check if paths are the same ([InlineData]) - try names with different capitaization (Windows and Linux handle it differently) | true or false      |
-    | Get real path from symlinks (link to file, link to directory, link to link, double linked, nonexistent link) - detail: will need to create temp files and might not work on Windows (depends on version) | target      |
-    | Relative path | correct path     |
+---------------------------------------------------------------------
+
+#### PathHelper:
+
+- Create TempDirectoryUtils that makes it easier to create and dispose temporary directories for testing
+- Create SymLinkUtils.cs that checks if the current machine can create symlinks, if not skip it
+
+| Case        | Expected    |
+| ----------- | ----------- |
+| Normalize path with extra '/' | Trim extra chat      |
+| Normalize path that is root  | root stays - no change     |
+| Normalize path with ".." example data/example/../new  | root stays - no change     |
+| Check if paths are inside other paths ([InlineData]) | true or false      |
+| Check if paths are the same ([InlineData]) - try names with different capitaization (Windows and Linux handle it differently) | true or false      |
+| Get real path from symlinks (link to file, link to directory, link to link, double linked, nonexistent link) - detail: will need to create temp files and might not work on Windows (depends on version) | target      |
+| Relative path | correct path     |
+
+---------------------------------------------------------------------
+
+#### CommandLineOptions:
+
+| Case        | Expected    |
+| ----------- | ----------- |
+| Parse parameters with invalid shape |  Exception     |
+| source (does not exist / is a file / subdirectory of replica) |  Exception     |
+| replica (is a file / same as source / subdirectory of source) |  Exception     |
+| log file (same as source or replica/ inside of source or replica) |  Exception     |
+| valid arguments |  valid object     |
+| valid arguments in different order |  valid object     |
+| log path and interval are not passed |  valid object with default interval and log  |
+
+---------------------------------------------------------------------
+
+#### FileComparer:
+
+| Case        | Expected    |
+| ----------- | ----------- |
+| Files with different sizes |  false    |
+| Files with same size, different mtime, same content |  true    |
+| Files with same size, same mtime, different content |  true    | (see note above)
+| Files with same size, different mtime, different content |  false    |
+
+---------------------------------------------------------------------
+
+#### SyncEngine:
+
+| Case        | Expected    |
+| ----------- | ----------- |
+| New file in source |  file copied in replica     |
+| No changes in source |  no changes in replica    |
+| modified file in source  |  updated on replica  |
+| file deleted in source |  file deleted in replica    |
+| empty directories and nested directories |  copied to replica    |
+| source has file but replica has dir with same name |  delete dir in replica and copy file from source to replica   |
+| source has dir but replica has file with same name |  delete file in replica and create dir in replica    |
+| mtime changes in file inside source but not the content |  file not copied (hash still matches)    |
+| symlink loop in source |  should fire guard (visited detected)    |
+| directory deleted from source |  deleted from replica    |
+| replica has a symlink to file (source does not) |  delete link from replica (not target)    |
+| replica has a symlink to directory (source does not) |  delete link from replica (not target)    |
+| cannot read sub directory in source (permissions) |  log error and continue cycle    | (linux only)
+| entry in replica cannot be deleted (permissions) |   log error and continue cycle  | (linux only)
+| file inside directory cannot be deleted (permissions) |   log error and continue cycle  | (linux only)
     
-    CommandLineOptions:
+---------------------------------------------------------------------
 
-    | Case        | Expected    |
-    | ----------- | ----------- |
-    | Parse parameters with invalid shape |  Exception     |
-    | source (does not exist / is a file / subdirectory of replica) |  Exception     |
-    | replica (is a file / same as source / subdirectory of source) |  Exception     |
-    | log file (same as source or replica/ inside of source or replica) |  Exception     |
-    | valid arguments |  valid object     |
-    | valid arguments in different order |  valid object     |
-    | log path and interval are not passed |  valid object with default interval and log  |
+#### SyncEnginePerformance:
 
-    FileComparer:
-    | Case        | Expected    |
-    | ----------- | ----------- |
-    | Files with different sizes |  false    |
-    | Files with same size, different mtime, same content |  true    |
-    | Files with same size, same mtime, different content |  true    | (see note above)
-    | Files with same size, different mtime, different content |  false    |
+- **Performance tests**
 
-    SyncEngine:
+| Case        | Expected    |
+| ----------- | ----------- |
+| large directory tree - run 2 cycles (first and second without changes) |  first cycle will create all files and second cycle will only recheck the files, so it should be faster  |
+| Two directory trees to compare - one bigger than the other (2x size difference) - compare second cycle (no changes) |  ratio: smaller tree should be roughly 2x faster than the bigger tree    |
+| Two directory trees to compare - one bigger than the other (2x size difference) - compare second cycle (with mtime changed to force hashing of content) |  ratio: smaller tree should be roughly 2x faster than the bigger tree   |
 
-    | Case        | Expected    |
-    | ----------- | ----------- |
-    | New file in source |  file copied in replica     |
-    | No changes in source |  no changes in replica    |
-    | file deleted in source |  file deleted in replica    |
-    | empty directories and nested directories |  copied to replica    |
-    | source has file but replica has dir with same name |  delete dir in replica and copy file from source to replica   |
-    | source has dir but replica has file with same name |  delete file in replica and create dir in replica    |
-    | mtime changes in file inside source but not the content |  file not copied (hash still matches)    |
-    | symlink loop in source |  should fire guard (visited detected)    |
+---------------------------------------------------------------------
+
+#### E2ETests:
+
+
+| Case        | Expected    |
+| ----------- | ----------- |
+| Run executable with invalid args |  correct exit code and message in stderr |
+| run executable with --help |  correct exit code and message in stdout   |
+| run executable with correct arguments |  correct exit code, file created and log with right content   |
