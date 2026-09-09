@@ -19,7 +19,7 @@ dotnet test                                      # run the test suite
 ## Usage
 
 ```
-USAGE: synch_dirs <source> <replica> [options]
+USAGE: syncdirs <source> <replica> [options]
 
 REQUIRED
 <source>                    - path to source folder
@@ -27,14 +27,14 @@ REQUIRED
 
 OPTIONS
 -i, --interval <seconds>    - synchronization interval in seconds (default: 60s)
--l, --logpath <path>        - path to log file (default: ./synch.log)
+-l, --logpath <path>        - path to log file (default: ./syncdirs.log)
 -h, --help                  - this info
 ```
 
 Options may appear before, after or between the two positional paths.
 
 ```bash
-dotnet run --project src -- ~/source ~/backup/replica -i 30 -l ~/logs/synch.log
+dotnet run --project src -- ~/source ~/backup/replica -i 30 -l ~/logs/sync.log
 ```
 
 ## Project structure

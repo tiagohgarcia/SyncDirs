@@ -50,11 +50,14 @@ Program that synchronizes two folders: source and replica
         1. File/Dir does not exist in replica --> then copy
 
         2. File exists in replica:
+
+            **FileComparer**
             1. size
             2. last write time
             3. content hash (MD5)
             - **Process:** filter by size and 'last write time' first (cheap/fast), and only if these don't match hash content and compare (more expensive)
             - if it does not match --> then copy
+            **edge case: files will have same name, same size and same mofication time, but the content is different** - almost impossible scenario to hit, because the milliseconds of both files have to match.
         
         3. edge cases: 
             - replica has a dir with same name of file in source --> then delete replica dir and copy file from source
@@ -63,7 +66,7 @@ Program that synchronizes two folders: source and replica
     - File/Dir exists in replica but not in source --> then delete
 
     - symbolic links will be accepted:
-        - Need a guard for infinite recursing (double linked files)
+        - Need a guard for infinite recursing (double linked files) (visited HashSet)
         - if replica dir is a symlink, when deleting, delete the link and not the target file
         - In Linux should work without problems, but windows can be trickier (testing + creating symlinks)
 
@@ -78,6 +81,7 @@ Program that synchronizes two folders: source and replica
         - get target path behind a symlink
         - check is path is inside another (ex: source/replica)
         - check if paths are the same
+        - gets relative path
 
 ---------------------------------------------------------------------
 
@@ -112,15 +116,18 @@ docs/
 src/
     Program.cs                      entry point - arguments, call logger and loop
     Logger.cs                       custom logger: Interface (Info, Warn, Error) + console and file implementation
-    PathHelper.cs                   helper for path normalization, verification (inside or equal) and symlink chase
+    PathHelper.cs                   helper for path normalization, verification (inside or equal), realtive, symlink chase
     CommandLineOptions.cs           parsing and validation, defaults and help
+    FileComparer.cs                 check if two files are the same (size/mtime/hash comparison)
     SyncEngine.cs                   cycle: create/copy pass + deletion pass (stray files)
 tests/
     utils/
         TempDirectory.cs            create and Dispose temporary directory for testing
         SymLinkUtils.cs             symlink creation allowed check
+        LoggerUtils.cs              
     PathHelperTests.cs
     CommandLineOptionsTests.cs
+    FileComparerTests.cs
     SyncEngineTests.cs
 ```
 
@@ -143,6 +150,7 @@ tests/
     | Check if paths are inside other paths ([InlineData]) | true or false      |
     | Check if paths are the same ([InlineData]) - try names with different capitaization (Windows and Linux handle it differently) | true or false      |
     | Get real path from symlinks (link to file, link to directory, link to link, double linked, nonexistent link) - detail: will need to create temp files and might not work on Windows (depends on version) | target      |
+    | Relative path | correct path     |
     
     CommandLineOptions:
 
@@ -156,11 +164,18 @@ tests/
     | valid arguments in different order |  valid object     |
     | log path and interval are not passed |  valid object with default interval and log  |
 
+    FileComparer:
+    | Case        | Expected    |
+    | ----------- | ----------- |
+    | Files with different sizes |  false    |
+    | Files with same size, different mtime, same content |  true    |
+    | Files with same size, same mtime, different content |  true    | (see note above)
+    | Files with same size, different mtime, different content |  false    |
+
     SyncEngine:
 
     | Case        | Expected    |
     | ----------- | ----------- |
-    | Compare files (size/mtime/hash) - size first, then mtime and finally hash (limitation mentioned in Approach (2.)) |  true or false     |
     | New file in source |  file copied in replica     |
     | No changes in source |  no changes in replica    |
     | file deleted in source |  file deleted in replica    |
@@ -168,3 +183,4 @@ tests/
     | source has file but replica has dir with same name |  delete dir in replica and copy file from source to replica   |
     | source has dir but replica has file with same name |  delete file in replica and create dir in replica    |
     | mtime changes in file inside source but not the content |  file not copied (hash still matches)    |
+    | symlink loop in source |  should fire guard (visited detected)    |
