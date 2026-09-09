@@ -18,14 +18,3 @@ internal static class SymLinkAllowed
         }
     }
 }
-
-public sealed class SymLinkFactAttribute : FactAttribute
-{
-    public SymLinkFactAttribute()
-    {
-        if(!SymLinkAllowed.IsAllowed)
-        {
-            Skip = "Symlink creation is not allowed in this machine";
-        }
-    }
-}
