@@ -1,4 +1,5 @@
-﻿using SyncDirs;
+﻿using System.Diagnostics;
+using SyncDirs;
 
 internal class Program
 {
@@ -40,6 +41,44 @@ internal class Program
         {
             log.Info(options.ToString());
 
+            using CancellationTokenSource cts = new();
+            Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+
+            SyncEngine engine = new SyncEngine(options.SourcePath, options.ReplicaPath, log);
+            Stopwatch sw = new();
+
+            while(!cts.IsCancellationRequested)
+            {
+                try
+                {
+                    sw.Restart();
+                    SyncStats stats = await engine.RunCycleAsync(cts.Token);
+                    if(stats.HasChanges) 
+                    {
+                        log.Info($"cycle completed in {sw.Elapsed.TotalMilliseconds:F1}ms:");
+                        log.Info($"{stats}");
+                    }
+                }
+                catch(OperationCanceledException)
+                {
+                    break;
+                }
+                catch(Exception e)
+                {
+                    log.Error($"cycle failed: {e.Message}");
+                }
+
+                try
+                {
+                    await Task.Delay(options.Interval, cts.Token);
+                }
+                catch(OperationCanceledException)
+                {
+                    break;
+                }
+            }
+
+            log.Info("sync stopped");
         }
         return 0;
     }

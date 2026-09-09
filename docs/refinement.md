@@ -120,6 +120,7 @@ src/
     CommandLineOptions.cs           parsing and validation, defaults and help
     FileComparer.cs                 check if two files are the same (size/mtime/hash comparison)
     SyncEngine.cs                   cycle: create/copy pass + deletion pass (stray files)
+    SyncStats.cs                    aggregates stats afeter each cycle run (files/dirs created/copied/deleted)
 tests/
     utils/
         TempDirectory.cs            create and Dispose temporary directory for testing
